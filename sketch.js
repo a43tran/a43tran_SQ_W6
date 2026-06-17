@@ -42,6 +42,29 @@ const BULLET_SPEED = 10;
 const SHOOT_COOLDOWN = 12;
 const INVINCIBLE_FRAMES = 90;
 
+let backgroundImg;
+let characterSheet;
+
+const SPRITE = {
+  frameWidth:  75,
+  frameHeight: 150,
+  numFrames:   4,
+  animSpeed:   20,
+  scale:       0.5,
+  rows: {
+    down:  0,
+    up:    1,
+    right: 2,
+    left:  3,
+  },
+  offsets: {
+    down:  { x: 0, y: 0  },
+    up:    { x: 0, y: 0  },
+    right: { x: .1, y: 10 },
+    left:  { x: 2.2, y: 20 },
+  },
+};
+
 // ------------------------------------------------------------
 // PLAYER
 // Position is in world coordinates.
@@ -139,6 +162,9 @@ let gameState = STATE_PLAY;
 function preload() {
   enemyData    = loadJSON("data/enemies.json");
   obstacleData = loadJSON("data/obstacles.json");
+
+  backgroundImg = loadImage("assets/images/bg.png");
+  characterSheet = loadImage("assets/images/character.png");
 
   // Uncomment to load sounds:
   // shootSound     = loadSound("assets/sounds/shoot.wav");
@@ -376,6 +402,8 @@ function applyBounce() {
 // Only shapes near the camera are drawn for performance.
 // ------------------------------------------------------------
 function drawBackground() {
+  image(backgroundImg, 0, 0, WORLD_W, WORLD_H);
+
   noStroke();
   for (let i = 0; i < bgShapes.length; i++) {
     let s = bgShapes[i];
