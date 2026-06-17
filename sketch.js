@@ -83,6 +83,8 @@ let player = {
   invincibleTimer: 0,
   bounceVX: 0,
   bounceVY: 0,
+  frame: 0,
+  frameTimer: 0,
 };
 
 // ------------------------------------------------------------
@@ -148,13 +150,13 @@ let gameState = STATE_PLAY;
 // ------------------------------------------------------------
 // SOUNDS — uncomment and fill in paths to add audio
 // ------------------------------------------------------------
-// let shootSound;
-// let hitSound;
-// let playerHitSound;
-// let bossHitSound;
-// let bossMusic;
-// let winSound;
-// let music;
+let shootSound;
+let hitSound;
+let playerHitSound;
+let bossHitSound;
+let bossMusic;
+let winSound;
+let music;
 
 // ============================================================
 // preload()
@@ -167,13 +169,13 @@ function preload() {
   characterSheet = loadImage("assets/images/character.png");
 
   // Uncomment to load sounds:
-  // shootSound     = loadSound("assets/sounds/shoot.wav");
-  // hitSound       = loadSound("assets/sounds/hit.wav");
-  // playerHitSound = loadSound("assets/sounds/playerhit.wav");
-  // bossHitSound   = loadSound("assets/sounds/bosshit.wav");
-  // bossMusic      = loadSound("assets/sounds/bossmusic.mp3");
-  // winSound       = loadSound("assets/sounds/win.wav");
-  // music          = loadSound("assets/sounds/music.mp3");
+  shootSound     = loadSound("assets/sounds/shoot.mp3");
+  hitSound       = loadSound("assets/sounds/hit.mp3");
+  playerHitSound = loadSound("assets/sounds/hit.mp3");
+  bossHitSound   = loadSound("assets/sounds/bosshit.mp3");
+  bossMusic      = loadSound("assets/sounds/bossmusic.mp3");
+  winSound       = loadSound("assets/sounds/win.mp3");
+  music = loadSound("assets/sounds/bg.mp3");
 }
 
 // ============================================================
@@ -207,7 +209,7 @@ function setup() {
   camY = player.y - height / 2;
 
   // Uncomment to start music:
-  // music.loop();
+  music.loop();
 }
 
 // ============================================================
@@ -369,15 +371,23 @@ function checkObstaclePlayerCollision() {
         player.bounceVY = (dy / len) * 8;
       }
 
-      // playerHitSound.play();
+      playerHitSound.play();
 
       if (player.health <= 0) {
         gameState = STATE_OVER;
-        // music.stop();
+        music.stop();
       }
       break;
     }
   }
+}
+
+function getPlayerAnimRow() {
+  if (player.direction.y === -1) return SPRITE.rows.up;
+  if (player.direction.y === 1)  return SPRITE.rows.down;
+  if (player.direction.x === -1) return SPRITE.rows.left;
+  if (player.direction.x === 1)  return SPRITE.rows.right;
+  return SPRITE.rows.down; // idle default
 }
 
 // ------------------------------------------------------------
@@ -480,8 +490,18 @@ function handleInput() {
       vy: player.direction.y * BULLET_SPEED,
     });
     player.shootTimer = SHOOT_COOLDOWN;
-    // shootSound.play();
+    shootSound.play();
   }
+
+if (keyIsDown(87) || keyIsDown(83) || keyIsDown(65) || keyIsDown(68)) {
+  player.frameTimer++;
+  if (player.frameTimer >= SPRITE.animSpeed) {
+    player.frame = (player.frame + 1) % SPRITE.numFrames;
+    player.frameTimer = 0;
+  }
+} else {
+  player.frame = 0; // idle frame
+}
 }
 
 // ------------------------------------------------------------
@@ -563,8 +583,8 @@ function spawnBoss() {
   enemies = [];
   gameState = STATE_BOSS;
 
-  // music.stop();
-  // bossMusic.loop();
+  music.stop();
+  bossMusic.loop();
 }
 
 // ------------------------------------------------------------
@@ -647,12 +667,12 @@ function checkBulletBossCollision() {
     if (d < boss.r + 6) {
       bullets.splice(i, 1);
       boss.health--;
-      // bossHitSound.play();
+      bossHitSound.play();
 
       if (boss.health <= 0) {
         gameState = STATE_WIN;
-        // winSound.play();
-        // bossMusic.stop();
+        winSound.play();
+        bossMusic.stop();
       }
       break;
     }
@@ -670,11 +690,11 @@ function checkBossPlayerCollision() {
     player.health--;
     player.invincible      = true;
     player.invincibleTimer = INVINCIBLE_FRAMES;
-    // playerHitSound.play();
+    playerHitSound.play();
 
     if (player.health <= 0) {
       gameState = STATE_OVER;
-      // bossMusic.stop();
+      bossMusic.stop();
     }
   }
 }
@@ -691,11 +711,11 @@ function checkEnemyPlayerCollision() {
       player.health--;
       player.invincible      = true;
       player.invincibleTimer = INVINCIBLE_FRAMES;
-      // playerHitSound.play();
+      playerHitSound.play();
 
       if (player.health <= 0) {
         gameState = STATE_OVER;
-        // music.stop();
+        music.stop();
       }
       break;
     }
@@ -713,7 +733,7 @@ function checkBulletEnemyCollisions() {
         bullets.splice(i, 1);
         enemies.splice(j, 1);
         score++;
-        // hitSound.play();
+        hitSound.play();
         break;
       }
     }
@@ -818,32 +838,29 @@ function drawPlayer() {
   if (player.invincible && floor(player.invincibleTimer / 6) % 2 === 0) return;
 
   push();
-  fill(0, 200, 180);
-  noStroke();
+  imageMode(CENTER);
 
-  beginShape();
-  let numPoints = 48;
-  for (let i = 0; i < numPoints; i++) {
-    let angle    = (TWO_PI / numPoints) * i;
-    let noiseVal = noise(cos(angle) * 0.8 + player.blobT, sin(angle) * 0.8 + player.blobT);
-    let r        = player.r + map(noiseVal, 0, 1, -6, 6);
-    vertex(player.x + cos(angle) * r, player.y + sin(angle) * r);
-  }
-  endShape(CLOSE);
+  let row = getPlayerAnimRow();
+  let sx = player.frame * SPRITE.frameWidth;
+  let sy = row * SPRITE.frameHeight;
 
-  fill(10);
-  ellipse(player.x - 7, player.y - 5, 7, 7);
-  ellipse(player.x + 7, player.y - 5, 7, 7);
+  let off = SPRITE.offsets[
+    Object.keys(SPRITE.rows).find(k => SPRITE.rows[k] === row)
+  ];
 
-  fill(255);
-  ellipse(
-    player.x + player.direction.x * (player.r - 4),
-    player.y + player.direction.y * (player.r - 4),
-    8
+  image(
+    characterSheet,
+    player.x + off.x,
+    player.y + off.y,
+    SPRITE.frameWidth * SPRITE.scale,
+    SPRITE.frameHeight * SPRITE.scale,
+    sx,
+    sy,
+    SPRITE.frameWidth,
+    SPRITE.frameHeight
   );
 
   pop();
-  player.blobT += 0.015;
 }
 
 // ------------------------------------------------------------
@@ -1071,6 +1088,6 @@ function keyPressed() {
     camX = player.x - width / 2;
     camY = player.y - height / 2;
 
-    // music.loop();
+    music.loop();
   }
 }
