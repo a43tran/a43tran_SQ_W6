@@ -1,15 +1,15 @@
 {
   "waves": [
     {
-      "spawnAt": 1600,
+      "spawnAt": 2000,
       "enemies": [
-        { "speed": 1.2 },
-        { "speed": 1.2 },
-        { "speed": 1.2 }
+        { "speed": 2 },
+        { "speed": 2 },
+        { "speed": 2 }
       ]
     },
     {
-      "spawnAt": 1000,
+      "spawnAt": 1500,
       "enemies": [
         { "speed": 1.5 },
         { "speed": 1.5 },
@@ -18,13 +18,13 @@
       ]
     },
     {
-      "spawnAt": 500,
+      "spawnAt": 300,
       "enemies": [
-        { "speed": 1.8 },
-        { "speed": 1.8 },
-        { "speed": 1.8 },
-        { "speed": 1.8 },
-        { "speed": 2.0 }
+        { "speed": 1.2 },
+        { "speed": 1.2 },
+        { "speed": 1.2 },
+        { "speed": 1.2 },
+        { "speed": 1.2 }
       ]
     }
   ],
@@ -32,8 +32,8 @@
     "retreatY": 150,
     "r": 60,
     "health": 20,
-    "chargeSpeed": 6,
-    "retreatSpeed": 2,
+    "chargeSpeed": 10,
+    "retreatSpeed": 3,
     "chargePause": 90
   }
 }
